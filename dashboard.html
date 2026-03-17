@@ -4,22 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Lecture Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; text-align: center; }
-        #loginSection { border: 1px solid #ccc; padding: 40px; border-radius: 8px; margin-top: 50px; }
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; text-align: center; color: #333; }
+        #loginSection { border: 1px solid #e0e0e0; padding: 40px; border-radius: 8px; margin-top: 50px; background: #fafafa; }
         .hidden { display: none; }
         button { background: #4285F4; color: white; padding: 10px 15px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; font-size: 1.1em; }
-        #chartContainer { position: relative; height: 50vh; width: 100%; margin-top: 30px; }
-        #questionStatus { font-size: 1.5em; font-weight: bold; margin-bottom: 10px; color: #333; }
-        #voteCount { color: #666; margin-bottom: 20px; }
+        #chartContainer { position: relative; height: 500px; width: 100%; margin-top: 30px; visibility: hidden; } /* Hidden until revealed */
+        #questionStatus { font-size: 1.4em; font-weight: 600; margin-bottom: 5px; color: #2c3e50; }
+        #voteCount { color: #7f8c8d; margin-bottom: 20px; font-size: 1.1em; }
+        svg { background: #fdfdfd; border-radius: 8px; border: 1px solid #eee; }
     </style>
 </head>
 <body>
 
     <div id="loginSection">
         <h2>Dashboard Login</h2>
-        <p>Please authenticate to access live audience data.</p>
+        <p style="color: #666;">Please authenticate to access live audience data.</p>
         <button id="loginBtn">Log in with Google</button>
     </div>
 
@@ -28,7 +29,7 @@
         <div id="voteCount">Total Votes: 0</div>
         
         <div id="chartContainer">
-            <canvas id="resultsChart"></canvas>
+            <svg id="resultsChart" width="900" height="500"></svg>
         </div>
     </div>
 
@@ -55,9 +56,20 @@
         const dashboardSection = document.getElementById('dashboardSection');
         const questionStatus = document.getElementById('questionStatus');
         const voteCount = document.getElementById('voteCount');
+        const chartContainer = document.getElementById('chartContainer');
         
-        let chartInstance = null;
-        let unsubscribeAnswers = null; // Keeps track of the active answer listener
+        let unsubscribeAnswers = null;
+        
+        // D3 Physics Variables
+        let simulation = null;
+        let nodes = []; // Holds the data for each student's vote
+        let currentOptions = [];
+        const width = 900;
+        const height = 500;
+        const radius = 9; // Size of the vote discs
+        
+        // A classy, muted color palette
+        const colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"];
 
         // 1. Authentication
         document.getElementById('loginBtn').addEventListener('click', () => {
@@ -75,108 +87,147 @@
             }
         });
 
-        // 2. Setup or Update the Chart
-        function initChart(options) {
-            const ctx = document.getElementById('resultsChart').getContext('2d');
-            
-            // Destroy the old chart if it exists so we can draw a new one
-            if (chartInstance) {
-                chartInstance.destroy();
+        // 2. Setup D3 Canvas and Physics Simulation
+        function initSwarm(options) {
+            currentOptions = options;
+            nodes = []; // Clear old dots
+
+            const svg = d3.select("#resultsChart");
+            svg.selectAll("*").remove(); // Clear previous drawing
+
+            // Create a scale to evenly space the attractors (target locations) along the X axis
+            const xScale = d3.scalePoint()
+                .domain(options)
+                .range([100, width - 100])
+                .padding(0.5);
+
+            // Create a color scale mapped to our options
+            const colorScale = d3.scaleOrdinal()
+                .domain(options)
+                .range(colors);
+
+            // Draw the classy text labels at the bottom
+            svg.selectAll(".label")
+                .data(options)
+                .enter()
+                .append("text")
+                .attr("class", "label")
+                .attr("x", d => xScale(d))
+                .attr("y", height - 30)
+                .attr("text-anchor", "middle")
+                .attr("fill", "#2c3e50")
+                .style("font-size", "16px")
+                .style("font-weight", "500")
+                .text(d => `${d} (0)`);
+
+            // Initialize the physics simulation
+            simulation = d3.forceSimulation(nodes)
+                // Pull dots toward their chosen category's X coordinate
+                .force("x", d3.forceX(d => xScale(d.choice)).strength(0.12))
+                // Pull dots toward the vertical center
+                .force("y", d3.forceY((height / 2) - 20).strength(0.08))
+                // Prevent dots from overlapping each other
+                .force("collide", d3.forceCollide(radius + 1.5).iterations(3))
+                .on("tick", ticked);
+
+            // This function runs on every frame of the simulation to update circle positions
+            function ticked() {
+                const circles = svg.selectAll("circle").data(nodes, d => d.id);
+
+                // Add new circles
+                circles.enter()
+                    .append("circle")
+                    .attr("r", radius)
+                    .attr("fill", d => colorScale(d.choice))
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 1)
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y)
+                    // Merge handles both new and updating circles
+                    .merge(circles)
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y)
+                    .attr("fill", d => colorScale(d.choice)); // Update color if they changed their mind
+
+                // Remove old circles
+                circles.exit().remove();
             }
-
-            // Create an array of zeros matching the number of options
-            const initialData = new Array(options.length).fill(0);
-
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: options,
-                    datasets: [{
-                        label: 'Votes',
-                        data: initialData,
-                        backgroundColor: '#4285F4',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 } // Only show whole numbers
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
         }
 
-        // 3. Listen to the Live State (Traffic Controller)
+        // 3. Listen to the Live State
         function startListeningToLiveState() {
             onSnapshot(doc(db, "state", "live"), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
                     if (data.status === "open") {
-                        questionStatus.innerText = "Live Poll Open";
-                        questionStatus.style.color = "#34A853";
+                        questionStatus.innerText = "Polling is Open";
+                        questionStatus.style.color = "#55A868";
                     } else {
-                        questionStatus.innerText = "Poll Closed";
-                        questionStatus.style.color = "#EA4335";
+                        questionStatus.innerText = "Polling is Closed";
+                        questionStatus.style.color = "#C44E52";
                     }
 
-                    // NEW: Handle the Reveal State
-                    const chartCanvas = document.getElementById('resultsChart');
-                    if (data.reveal) {
-                        chartCanvas.style.visibility = "visible";
-                    } else {
-                        chartCanvas.style.visibility = "hidden";
-                    }
+                    // Reveal logic
+                    chartContainer.style.visibility = data.reveal ? "visible" : "hidden";
 
-                    // If it's a new question, initialize
-                    if (!chartInstance || chartInstance.data.labels.join() !== data.options.join()) {
-                        initChart(data.options);
-                        listenToAnswers(data.active_question_id, data.options);
+                    // Re-initialize physics if the question changed
+                    if (currentOptions.join() !== data.options.join()) {
+                        initSwarm(data.options);
+                        listenToAnswers(data.active_question_id);
                     }
                 }
             });
         }
 
-        // 4. Listen to the specific question's answers
-        function listenToAnswers(questionId, options) {
-            // Unsubscribe from the previous question's answers if necessary
-            if (unsubscribeAnswers) {
-                unsubscribeAnswers();
-            }
+        // 4. Listen to specific question's answers and feed the physics engine
+        function listenToAnswers(questionId) {
+            if (unsubscribeAnswers) unsubscribeAnswers();
 
             const answersRef = collection(db, "questions", questionId, "answers");
             
-            // Set up a new real-time listener
             unsubscribeAnswers = onSnapshot(answersRef, (snapshot) => {
-                let totalVotes = 0;
-                // Create a dictionary to keep running tallies (e.g., {"Convex": 0, "Non-convex": 0})
-                const tallies = {};
-                options.forEach(opt => tallies[opt] = 0);
-
-                // Loop through all documents in the subcollection
-                snapshot.forEach((doc) => {
-                    const answerData = doc.data();
-                    if (tallies[answerData.choice] !== undefined) {
-                        tallies[answerData.choice]++;
-                        totalVotes++;
+                voteCount.innerText = `Total Votes: ${snapshot.size}`;
+                
+                // NEW: Initialize a tally counter for our text labels
+                const tallies = new Map();
+                currentOptions.forEach(opt => tallies.set(opt, 0));
+                
+                // Map incoming data for quick lookup and count tallies
+                const newVotesMap = new Map();
+                snapshot.forEach(doc => {
+                    const choice = doc.data().choice;
+                    newVotesMap.set(doc.id, choice);
+                    
+                    // NEW: Increment the tally for this specific choice
+                    if (tallies.has(choice)) {
+                        tallies.set(choice, tallies.get(choice) + 1);
                     }
                 });
 
-                // Update the UI
-                voteCount.innerText = `Total Votes: ${totalVotes}`;
-                
-                // Map the tallies back to the chart data array in the correct order
-                const newData = options.map(opt => tallies[opt]);
-                chartInstance.data.datasets[0].data = newData;
-                chartInstance.update(); // Tell Chart.js to animate the new bars
+                // NEW: Update the text of all D3 labels dynamically
+                d3.select("#resultsChart").selectAll(".label")
+                    .text(d => `${d} (${tallies.get(d)})`);
+
+                // Remove nodes (students) who deleted their vote
+                nodes = nodes.filter(n => newVotesMap.has(n.id));
+
+                // Add or update nodes
+                newVotesMap.forEach((choice, id) => {
+                    const existingNode = nodes.find(n => n.id === id);
+                    if (existingNode) {
+                        existingNode.choice = choice; // Change target attractor
+                    } else {
+                        // Spawn new vote dot at the top center of the screen
+                        nodes.push({ id: id, choice: choice, x: width / 2, y: 0 });
+                    }
+                });
+
+                // Feed the updated data array to the physics engine and 'kick' it to start moving
+                if (simulation) {
+                    simulation.nodes(nodes);
+                    simulation.alpha(0.4).restart();
+                }
             });
         }
     </script>
