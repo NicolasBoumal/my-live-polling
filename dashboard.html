@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Lecture Dashboard</title>
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; text-align: center; color: #333; }
         #loginSection { border: 1px solid #e0e0e0; padding: 40px; border-radius: 8px; margin-top: 50px; background: #fafafa; }
@@ -13,8 +15,8 @@
         #chartContainer { position: relative; height: 500px; width: 100%; margin-top: 30px; visibility: hidden; } /* Hidden until revealed */
         #questionStatus { font-size: 1.4em; font-weight: 600; margin-bottom: 5px; color: #2c3e50; }
         #voteCount { color: #7f8c8d; margin-bottom: 20px; font-size: 1.1em; }
-        svg { background: #fdfdfd; border-radius: 8px; border: 1px solid #eee; }
     </style>
+
 </head>
 <body>
 
@@ -30,7 +32,7 @@
         <div id="voteCount" class="hidden">Total Votes: 0</div>
         
         <div id="chartContainer">
-            <svg id="resultsChart" width="900" height="500"></svg>
+            <svg id="resultsChart" width="900" height="500" style="background: transparent; border: none;"></svg>
         </div>
     </div>
 
