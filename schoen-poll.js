@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .data(options).enter().append("text")
             .attr("class", "label")
             .attr("x", d => xScale(d))
-            .attr("y", height - 20) 
+            .attr("y", 0.75*height)
             .attr("text-anchor", "middle")
             .text(d => `${d} (0)`);
 
