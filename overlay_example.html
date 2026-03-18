@@ -7,63 +7,7 @@
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script type="module" src="my-live-polling.js"></script>
-
-    <style>        
-        /* The Ghost Overlay: Covers the bottom 65% of the slide */
-        #live-poll-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 70%;
-            height: 70%;
-            z-index: 9999;
-            visibility: hidden; /* Controlled by Firebase 'reveal' state */
-            pointer-events: none; /* Lets you click through to the slide */
-        }
-
-        /* Make the SVG take the full space of the overlay */
-        #resultsChart {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Style the labels (possible answers) here.  */
-        #resultsChart .label {
-            font-size: xx-large;
-            font-weight: 700;
-            fill: #2c3e50; /* text color */
-            
-            /* The "Background" Trick */
-            paint-order: stroke;
-            stroke: white;
-            stroke-width: 8px;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            
-            pointer-events: none; /* Dots can be clicked "through" labels */
-            font-family: Palatino Linotype, Book Antiqua, Palatino, FreeSerif, serif; /* Maybe removing this makes it inherit the style from container? */
-        }
-        #resultsChart circle {
-            stroke: #fff;
-            stroke-width: 1px;
-        }
-        
-        /* Unobtrusive login button for admin */
-        #pollLoginBtn {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 10000;
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid #ccc;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            pointer-events: auto;
-        }
-        .hidden { display: none !important; }
-    </style>
+    <link rel="stylesheet" type="text/css" href="my-live-polling.css">
 
 </head>
 <body>

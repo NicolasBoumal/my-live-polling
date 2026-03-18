@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            currentRadius = Math.max(4, Math.min(16, 60 / Math.sqrt(Math.max(1, nodes.length))));
+            currentRadius = Math.max(4, Math.min(20, 350 / Math.sqrt(Math.max(1, nodes.length))));
 
             if (simulation) {
                 simulation.force("collide", d3.forceCollide(currentRadius + 1).strength(0.8));
