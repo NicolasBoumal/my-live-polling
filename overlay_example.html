@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Lecture Dashboard</title>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <style>
+        /* Style the labels (possible answers) here.  */
+        #resultsChart .label {
+            font-size: xx-large;
+            font-weight: 700;
+            fill: #2c3e50; /* text color */
+            
+            /* The "Background" Trick */
+            paint-order: stroke;
+            stroke: white;
+            stroke-width: 8px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            
+            pointer-events: none; /* Dots can be clicked "through" labels */
+            font-family: Palatino Linotype, Book Antiqua, Palatino, FreeSerif, serif; /* Maybe removing this makes it inherit the style from container? */
+        }
+        #resultsChart circle {
+            stroke: #fff;
+            stroke-width: 1px;
+        }
+    </style>
+
+</head>
+<body>
+
+    <button id="pollLoginBtn">Admin Login</button>
+
+    <div id="live-poll-overlay">
+        <svg id="resultsChart"></svg>
+    </div>
+
+    <script type="module" src="my-live-polling.js"></script>
+
+</body>
+</html>
