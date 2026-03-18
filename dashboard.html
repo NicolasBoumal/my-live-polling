@@ -155,12 +155,15 @@
             }
         }
 
-        // 3. Listen to the Live State
+        // 3. Listen to the Live State (Traffic Controller)
+        let lastKnownQuestionId = null; // Track the question ID (to be compared against the live question ID)
+
         function startListeningToLiveState() {
             onSnapshot(doc(db, "state", "live"), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
+                    // Update the visual status (Open/Closed)
                     if (data.status === "open") {
                         questionStatus.innerText = "Polling is Open";
                         questionStatus.style.color = "#55A868";
@@ -172,9 +175,17 @@
                     // Reveal logic
                     chartContainer.style.visibility = data.reveal ? "visible" : "hidden";
 
-                    // Re-initialize physics if the question changed
-                    if (currentOptions.join() !== data.options.join()) {
+                    // Check if the Question ID has changed
+                    if (data.active_question_id !== lastKnownQuestionId) {
+                        console.log("New question detected. Resetting dashboard...");
+                        
+                        lastKnownQuestionId = data.active_question_id;
+                        currentOptions = data.options; // Update global options for the tally logic
+                        
+                        // 1. Clear the physical swarm and labels
                         initSwarm(data.options);
+                        
+                        // 2. Kill the old answer listener and start the new one
                         listenToAnswers(data.active_question_id);
                     }
                 }
