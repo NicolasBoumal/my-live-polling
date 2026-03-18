@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         simulation = d3.forceSimulation(nodes)
             .force("x", d3.forceX(d => xScale(d.choice)).strength(0.15))
             .force("y", d3.forceY(height / 2 - 30).strength(0.1))
-            .force("collide", d3.forceCollide(currentRadius + 1).strength(0.8))
+            .force("collide", d3.forceCollide(currentRadius + 1).strength(1).iterations(3))
             .velocityDecay(0.15)
             .on("tick", ticked);
 
@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
             currentRadius = Math.max(4, Math.min(20, 350 / Math.sqrt(Math.max(1, nodes.length))));
 
             if (simulation) {
-                simulation.force("collide", d3.forceCollide(currentRadius + 1).strength(0.8));
+                simulation.force("collide", d3.forceCollide(currentRadius + 1).strength(1).iterations(3));
                 simulation.nodes(nodes);
                 simulation.alpha(0.8).restart();
             }
