@@ -39,6 +39,8 @@
         <input type="text" id="optionsInput" value="Yes, No">
         
         <button id="launchBtn">Launch New Question</button>
+
+        <button id="simulateBtn" style="background: #6c757d; margin-top: 10px; width: 100%;">Simulate 100 Random Votes</button>
         
         <hr style="margin: 20px 0;">
         
@@ -219,6 +221,52 @@
             const newReveal = !currentLiveState.reveal;
             await setDoc(doc(db, "state", "live"), { reveal: newReveal }, { merge: true });
         });
+
+        // Simulation button
+        document.getElementById('simulateBtn').addEventListener('click', () => {
+            if (!currentLiveState.active_question_id) {
+                alert("Launch a question first!");
+                return;
+            }
+
+            const questionId = currentLiveState.active_question_id;
+            const options = currentLiveState.options;
+            let votesSent = 0;
+            const totalToSimulate = 100;
+
+            statusText.innerText = "Simulating traffic...";
+
+            const interval = setInterval(async () => {
+                if (votesSent >= totalToSimulate) {
+                    clearInterval(interval);
+                    statusText.innerText = "Simulation complete.";
+                    return;
+                }
+
+                // 1. Pick a random option
+                const randomOption = options[Math.floor(Math.random() * options.length)];
+                
+                // 2. Generate a fake User ID string
+                const fakeUserId = "sim_" + Math.random().toString(36).substring(2, 15);
+
+                // 3. Write directly to the answers subcollection
+                // Note: This works because your Admin account has 'isAdmin()' permissions in rules
+                const answerRef = doc(db, "questions", questionId, "answers", fakeUserId);
+                
+                try {
+                    await setDoc(answerRef, {
+                        choice: randomOption,
+                        timestamp: serverTimestamp(),
+                        isSimulated: true // Useful if you want to filter them out later
+                    });
+                    votesSent++;
+                } catch (e) {
+                    console.error("Sim error:", e);
+                    clearInterval(interval);
+                }
+            }, 50); // Sends a vote every 50ms (adjust for a faster/slower trickle)
+        });
+
     </script>
 </body>
 </html>
