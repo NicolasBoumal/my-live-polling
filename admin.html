@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Lecture Poll - Admin</title>
+    <title>Schoen Poll Admin</title>
     <style>
         body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
         .panel { border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-top: 20px; }
@@ -33,7 +33,7 @@
         </div>
 
         <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; border: 1px solid #e9ecef;">
-            👥 Connected Students: <span id="studentCount" style="color: #4285F4;">0</span> &nbsp;|&nbsp;
+            👥 Active participants: <span id="studentCount" style="color: #4285F4;">0</span> &nbsp;|&nbsp;
             🗳️ Votes Cast: <span id="voteCount" style="color: #34A853;">0</span>
         </div>
 
@@ -60,7 +60,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 2. PASTE YOUR FIREBASE CONFIG HERE
         const firebaseConfig = {
             apiKey: "AIzaSyCRpILPQ5n3PimcVlQTl2g1oJ5zwR2Xing",
             authDomain: "my-live-polling.firebaseapp.com",

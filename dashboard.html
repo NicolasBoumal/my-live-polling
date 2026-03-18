@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Lecture Dashboard</title>
+    <title>Schoen Poll Dashboard</title>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
@@ -43,7 +43,7 @@
 
     <div id="loginSection">
         <h2>Dashboard Login</h2>
-        <p style="color: #666;">Please authenticate to access live audience data.</p>
+        <p style="color: #666;">Authenticate to access live audience data.</p>
         <button id="loginBtn">Log in with Google</button>
     </div>
 
@@ -62,7 +62,6 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // PASTE YOUR FIREBASE CONFIG HERE
         const firebaseConfig = {
             apiKey: "AIzaSyCRpILPQ5n3PimcVlQTl2g1oJ5zwR2Xing",
             authDomain: "my-live-polling.firebaseapp.com",

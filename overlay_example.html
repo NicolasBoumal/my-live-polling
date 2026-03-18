@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Lecture Dashboard</title>
+    <title>Schoen Poll overlay example</title>
 
+    <!-- Include all three of these on your webpage. -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script type="module" src="my-live-polling.js"></script>
     <link rel="stylesheet" type="text/css" href="my-live-polling.css">
@@ -12,8 +13,9 @@
 </head>
 <body>
 
+    <!-- Then also include this anywhere on your webpage.
+         It's hidden by default: the Admin page toggles reveal/hide. -->
     <button id="pollLoginBtn">Admin Login</button>
-
     <div id="live-poll-overlay">
         <svg id="resultsChart"></svg>
     </div>
