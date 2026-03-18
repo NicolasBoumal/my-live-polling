@@ -6,7 +6,7 @@
     <title>Live Lecture Dashboard</title>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    
+
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; text-align: center; color: #333; }
         #loginSection { border: 1px solid #e0e0e0; padding: 40px; border-radius: 8px; margin-top: 50px; background: #fafafa; }
@@ -15,10 +15,26 @@
         #chartContainer { position: relative; height: 500px; width: 100%; margin-top: 30px; visibility: hidden; } /* Hidden until revealed */
         #questionStatus { font-size: 1.4em; font-weight: 600; margin-bottom: 5px; color: #2c3e50; }
         #voteCount { color: #7f8c8d; margin-bottom: 20px; font-size: 1.1em; }
+
+        #resultsChart .label {
+            font-size: xx-large;
+            font-weight: 700;
+            fill: #2c3e50; /* Dark slate text */
+            
+            /* The "Background" Trick */
+            paint-order: stroke;
+            stroke: white;
+            stroke-width: 8px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            
+            pointer-events: none; /* Dots can be clicked "through" labels */
+            font-family: system-ui, -apple-system, sans-serif;
+        }
     </style>
 
 </head>
-<body>
+<body background="#454545">
 
     <div id="loginSection">
         <h2>Dashboard Login</h2>
