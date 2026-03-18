@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (tallies.has(choice)) tallies.set(choice, tallies.get(choice) + 1);
             });
 
-            d3.select("#resultsChart").selectAll(".label").text(d => `${d} (${tallies.get(d)})`);
+            d3.select("#resultsChart").selectAll(".label").text(d => `${d} (${tallies.get(d)})`).raise(); // raise() makes the text appear on top of circles
 
             nodes = nodes.filter(n => newVotesMap.has(n.id));
 
