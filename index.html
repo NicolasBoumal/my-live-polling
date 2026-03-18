@@ -51,19 +51,41 @@
         let activeQuestionId = null;
         let currentSelection = null;
 
-        // 1. Log the student in silently
-        signInAnonymously(auth).catch((error) => {
-            statusMessage.innerText = "Failed to connect. Please refresh.";
-            console.error(error);
-        });
+        // 1. Log the student in silently with Error Handling
+        signInAnonymously(auth)
+            .then(() => {
+                // Success - the onAuthStateChanged listener will take it from here
+                console.log("Logged in anonymously");
+            })
+            .catch((error) => {
+                console.error("Auth Error:", error.code, error.message);
+                
+                const statusMessage = document.getElementById('statusMessage');
+                
+                // Check if we hit the IP registration limit
+                if (error.code === 'auth/quota-exceeded' || error.code === 'auth/too-many-requests') {
+                    statusMessage.innerHTML = `
+                        <div style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
+                            <strong>⚠️ Connection Limit Reached</strong><br>
+                            Too many new users are connecting from the same IP address at once.
+                            <br><br>
+                            <strong>To fix this:</strong>
+                            <ol>
+                                <li>Turn <strong>OFF</strong> Wi-Fi on your phone.</li>
+                                <li>Refresh this page using your <strong>Cellular Data</strong>.</li>
+                                <li>Once logged in, you can turn Wi-Fi back on.</li>
+                            </ol>
+                        </div>`;
+                } else {
+                    statusMessage.innerText = "Connection error. Please try refreshing the page.";
+                }
+            });
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                
-                // PRAGMATIC PRESENCE: Register that this user is online
+                // Register presence
                 setDoc(doc(db, "presence", user.uid), { last_seen: serverTimestamp() });
-                
                 startListeningToLiveState();
             }
         });
