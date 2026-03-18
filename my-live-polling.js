@@ -23,6 +23,7 @@ let simulation;
 let nodes = [];
 let currentOptions = [];
 let currentRadius = 12;
+let currentQuestionId = null;
 
 // A classy, muted color palette
 const colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"];
@@ -60,8 +61,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     overlay.style.visibility = "hidden";
                 }
 
-                // If question changed, reset swarm
-                if (data.active_question_id && data.options.join() !== currentOptions.join()) {
+                // If the question ID changed, reset the swarm
+                if (data.active_question_id && data.active_question_id !== currentQuestionId) {
+                    currentQuestionId = data.active_question_id; // Store the new ID
                     initSwarm(data.options);
                     listenToAnswers(data.active_question_id);
                 }
@@ -146,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     nodes.push({ 
                         id: id, choice: choice, 
                         x: width / 2 + (Math.random() - 0.5) * 50, 
-                        y: -20, vy: 10 
+                        y: -5, vy: 3 
                     });
                 }
             });
