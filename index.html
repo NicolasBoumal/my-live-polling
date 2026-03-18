@@ -55,42 +55,42 @@
 
         let clicksRemaining = 5; // Feeling facetious?
 
-        // 1. Log the student in silently with Error Handling
-        signInAnonymously(auth)
-            .then(() => {
-                // Success - the onAuthStateChanged listener will take it from here
-                console.log("Logged in anonymously");
-            })
-            .catch((error) => {
-                console.error("Auth Error:", error.code, error.message);
-                
-                const statusMessage = document.getElementById('statusMessage');
-                
-                // Check if we hit the IP registration limit
-                if (error.code === 'auth/quota-exceeded' || error.code === 'auth/too-many-requests') {
-                    statusMessage.innerHTML = `
-                        <div style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
-                            <strong>⚠️ Connection Limit Reached</strong><br>
-                            Too many new users are connecting from the same IP address at once.
-                            <br><br>
-                            <strong>To fix this:</strong>
-                            <ol>
-                                <li>Turn <strong>OFF</strong> Wi-Fi on your phone.</li>
-                                <li>Refresh this page using your <strong>Cellular Data</strong>.</li>
-                                <li>Once logged in, you can turn Wi-Fi back on.</li>
-                            </ol>
-                        </div>`;
-                } else {
-                    statusMessage.innerText = "Connection error. Please try refreshing the page.";
-                }
-            });
-
+        // 1. Log the student in silently as anonymous user (unless it's me, connected as admin)
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // If a user is already logged in (Admin or Student), just use that session
+                console.log("Session detected: ", user.isAnonymous ? "Anonymous" : "Authenticated");
                 currentUser = user;
+                
                 // Register presence
-                setDoc(doc(db, "presence", user.uid), { last_seen: serverTimestamp() });
+                setDoc(doc(db, "presence", user.uid), { 
+                    last_seen: serverTimestamp() 
+                }, { merge: true });
+
+                // Start the app logic
                 startListeningToLiveState();
+            } else {
+                // No session found? Only Then sign in anonymously
+                console.log("No session found. Signing in anonymously...");
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Auth Error:", error.code, error.message);
+                    if (error.code === 'auth/quota-exceeded' || error.code === 'auth/too-many-requests') {
+                        statusMessage.innerHTML = `
+                            <div style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
+                                <strong>⚠️ Connection Limit Reached</strong><br>
+                                Too many new users are connecting from the same IP address at once.
+                                <br><br>
+                                <strong>To fix this:</strong>
+                                <ol>
+                                    <li>Turn <strong>OFF</strong> Wi-Fi on your phone.</li>
+                                    <li>Refresh this page using your <strong>Cellular Data</strong>.</li>
+                                    <li>Once logged in, you can turn Wi-Fi back on.</li>
+                                </ol>
+                            </div>`;
+                    } else {
+                        statusMessage.innerText = "Connection error. Please try refreshing the page.";
+                    }
+                });
             }
         });
 
