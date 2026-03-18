@@ -201,7 +201,9 @@
             if (clicksRemaining > 0) {
                 if (clicksRemaining <= 3) {
                     const timesText = clicksRemaining === 1 ? "time" : "times";
-                    statusMessage.innerText = `You can change your answer ${clicksRemaining} more ${timesText}.`;   
+                    statusMessage.innerText = `You can change your answer ${clicksRemaining} more ${timesText}.`;
+                } else {
+                    statusMessage.innerText = "";
                 }
             } else {
                 statusMessage.innerText = "Final answer locked in.";
