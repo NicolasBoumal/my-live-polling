@@ -25,8 +25,9 @@ let currentOptions = [];
 let currentRadius = 12;
 let currentQuestionId = null;
 
-// A classy, muted color palette
-const colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"];
+// Custom color palette
+const colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#64B5CD", "#CCB974"];
+
 // 3. Wait for the DOM to load before grabbing elements
 document.addEventListener("DOMContentLoaded", () => {
     const loginBtn = document.getElementById('pollLoginBtn');
@@ -85,9 +86,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const width = container.clientWidth || 900;
         const height = container.clientHeight || 400;
 
-        const xScale = d3.scalePoint().domain(options).range([100, width - 100]);
-        
-        // Use custom colors array
+        // Adjust side margins based on the number of options
+        // If 2 options: margin is 30% of width (keeps them closer to center)
+        // If 4+ options: margin is 10% of width (spreads them out more)
+        const marginFactor = options.length <= 2 ? 0.30 : (options.length === 3 ? 0.20 : 0.10);
+        const margin = width * marginFactor;
+
+        const xScale = d3.scalePoint()
+            .domain(options)
+            .range([margin, width - margin]);
+
         const colorScale = d3.scaleOrdinal()
             .domain(options)
             .range(colors);
