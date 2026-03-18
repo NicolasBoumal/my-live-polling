@@ -102,10 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .text(d => `${d} (0)`);
 
         simulation = d3.forceSimulation(nodes)
-            .force("x", d3.forceX(d => xScale(d.choice)).strength(0.15))
-            .force("y", d3.forceY(height / 2 - 30).strength(0.1))
+            .force("x", d3.forceX(d => xScale(d.choice)).strength(0.10))
+            .force("y", d3.forceY(height / 2 - 30).strength(0.05))
             .force("collide", d3.forceCollide(currentRadius + 1).strength(1).iterations(3))
-            .velocityDecay(0.15)
+            .velocityDecay(0.35)
             .on("tick", ticked);
 
         function ticked() {
