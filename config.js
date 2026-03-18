@@ -7,3 +7,6 @@ export const firebaseConfig = {
     messagingSenderId: "367126138943",
     appId: "1:367126138943:web:857243dd5c68a2f00ce88a"
 };
+
+// Specify the URL to the clicker here, for the QR code.
+export const clickerUrl = "https://nicolasboumal.github.io/schoen-poll/";
