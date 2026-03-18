@@ -205,7 +205,7 @@
             unsubscribeAnswers = onSnapshot(answersRef, (snapshot) => {
                 voteCount.innerText = `Total Votes: ${snapshot.size}`;
                 
-                // NEW: Initialize a tally counter for our text labels
+                // Initialize a tally counter for our text labels
                 const tallies = new Map();
                 currentOptions.forEach(opt => tallies.set(opt, 0));
                 
@@ -215,13 +215,13 @@
                     const choice = doc.data().choice;
                     newVotesMap.set(doc.id, choice);
                     
-                    // NEW: Increment the tally for this specific choice
+                    // Increment the tally for this specific choice
                     if (tallies.has(choice)) {
                         tallies.set(choice, tallies.get(choice) + 1);
                     }
                 });
 
-                // NEW: Update the text of all D3 labels dynamically
+                // Update the text of all D3 labels dynamically
                 d3.select("#resultsChart").selectAll(".label")
                     .text(d => `${d} (${tallies.get(d)})`);
 
@@ -235,7 +235,13 @@
                         existingNode.choice = choice; // Change target attractor
                     } else {
                         // Spawn new vote dot at the top center of the screen
-                        nodes.push({ id: id, choice: choice, x: width / 2, y: 0 });
+                        nodes.push({ 
+                                id: id, 
+                                choice: choice, 
+                                x: width / 2 + (Math.random() - 0.5) * 50, // Added jitter
+                                y: -20, // Start above the SVG
+                                vy: 10  // Initial downward velocity push
+                            });
                     }
                 });
 
