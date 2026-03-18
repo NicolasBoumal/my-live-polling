@@ -183,8 +183,10 @@
                 }
 
                 // Provide a subtle clue about remaining moves
-                if (clicksRemaining > 0 && clicksRemaining <= 3) {
-                    statusMessage.innerText = `Changing your mind? Credits left for this question: ${clicksRemaining}.`;
+                if (clicksRemaining > 0) {
+                    if (clicksRemaining <= 3) {
+                        statusMessage.innerText = `Changing your mind? Max ${clicksRemaining} more.`;
+                    }
                 } else {
                     statusMessage.innerText = "Final answer locked in.";
                 }
