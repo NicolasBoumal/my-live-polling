@@ -49,7 +49,8 @@ service cloud.firestore {
     
     // List one or more admins here.
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == "PUT YOUR E-MAIL ADDRESS HERE, matching your google authentication";
+      return request.auth != null && 
+             request.auth.token.email in ["first-admin@gmail.com", "second-admin@gmail.com"];
     }
 
     // 1. The Live State: everyone can read it, only admins can change it.
