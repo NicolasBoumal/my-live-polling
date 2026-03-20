@@ -76,6 +76,7 @@
     <div id="loginSection">
         <h2>Schoen Poll Presenter Remote</h2>
         <button id="loginBtn">Log in with Google</button>
+        <div id="authMessage"></div>
     </div>
 
     <div id="adminSection" class="hidden">
@@ -117,13 +118,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         import { firebaseConfig } from "./config.js";
+        import { initAdminAuth } from "./adminauth.js";
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
         // UI Elements
@@ -148,21 +148,21 @@
             document.getElementById('voteCount').innerText = currentVoteCount;
         }
 
-        // Authentication
-        document.getElementById('loginBtn').addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()));
-        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('userEmailDisplay').innerText = `Logged in: ${user.email}`;
-                loginSection.classList.add('hidden');
+        // Admin authentication
+        initAdminAuth(app, db, {
+            loginSection: loginSection,
+            loginBtn: document.getElementById('loginBtn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            authMessage: document.getElementById('authMessage')
+        }, {
+            onAdminSuccess: (user) => {
                 adminSection.classList.remove('hidden');
-                setupAdminListeners(); 
-            } else {
-                loginSection.classList.remove('hidden');
+                document.getElementById('userEmailDisplay').innerText = `Logged in: ${user.email}`;
+                setupAdminListeners();
+            },
+            onLoggedOut: () => {
                 adminSection.classList.add('hidden');
-                cleanupListeners(); 
-            }
+                cleanupListeners(); }
         });
 
         // Listeners
