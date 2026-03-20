@@ -44,12 +44,18 @@ Usage should be self explanatory. In a nutshell:
 
 * The `results.html` page can be included as a "browser" source in [OBS](https://obsproject.com/): it will make the background transparent. This provides a means to overlay the vote bubbles and the QR code on top of your powerpoint / keynote / iPad goodnotes / ... seamlessly, still controlled by the admin remote (on your phone). The overlay only appears on the screen you share or on the virtual camera, so the presenter view stays clean.
 
-* Why Firestore and not real-time database? It's all about how Firebase's [free tier](https://firebase.google.com/pricing) is structured. Firestore allows a few tens of thousands of reads and writes per day: that's fine for a dozen polls in a classroom with a few hundred students. If it's not enough, you can pay for more and it's very cheap (a few cents per lecture would do). In contrast, the real-time database would allow vastly more reads and writes per day for free, but it has a cap at 100 simultaneous connections. Since each student establishes a connection, that's a no-go for that free tier. In principle, you could sign-up for the pay-as-you-go plan of the real-time database, which lifts the cap to 200'000 simultaneous connections. It is highly unlikely that your usage would ever exceed the free tier within the pay-as-you-go plan, and so this might be the superior option for large audiences; but your credit card would be attached to it. There are pros and cons; and switching requires changes in the code (which Gemini could execute if need be).
+* Why Firestore and not real-time database? It's all about how Firebase's [free tier](https://firebase.google.com/pricing) is structured. Firestore allows a few tens of thousands of reads and writes per day: that's fine for a dozen polls in a classroom with a few hundred students. If it's not enough, you can pay for more and it's very cheap (a few cents per lecture would do). In contrast, the real-time database would allow vastly more reads and writes per day for free, but it has a cap at 100 simultaneous connections. Since each student establishes a connection, that's a no-go for that free tier. That said, you could sign-up for the pay-as-you-go plan of the real-time database, which lifts the cap to 200'000 simultaneous connections. It is highly unlikely that your usage would ever exceed the free tier within the pay-as-you-go plan, and so this might be the superior option for large audiences. The only downsides would be that you have to attach a credit card to it, and that the code (here) would have to be rewritten partly (an LLM could do it).
 
 
 ## Firebase access rules
 
-Set these rules through the Firebase console: select your Firestore in the left pane, then click "Rules" in the horizontal menu. Edit and publish.
+Set these rules through the Firebase console:
+
+1. Select your Firestore in the left pane,
+2. Click "Rules" in the horizontal menu,
+4. Copy-paste the code below,
+5. !! Edit the list of admins,
+6. Click "Publish".
 
 ```js
 rules_version = '2';
