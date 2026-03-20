@@ -13,17 +13,19 @@ Create a [Firebase](https://console.firebase.google.com) project. No need for an
 
 In there:
 
-1. Allow authentication both with Google and as Anonymous user.
-2. Create a NoSQL Firestore database (not a Realtime Database): free tier should be plenty enough with this.
-3. Set the access rules (see below).
-4. Under Security -> Setting -> Authorized domains, make sure to include the domain from where your webpages will be served (include localhost and 127.0.0.1 for local testing).
+1. Under Security -> Authentication, click "get started" and allow authentication both with Google and as Anonymous user.
+2. Under Database & Storage, create a NoSQL Cloud Firestore database, standard edition (not a Realtime Database): free tier should be plenty enough with this.
+3. Under the "Rules" tab, set the access rules for that database (copy-paste code below).
+4. Under Security -> Authentication -> Settings -> Authorized domains, make sure to include the domain from where your webpages will be served (include localhost and 127.0.0.1 for local testing).
+5. Under Settings -> General, under "Your Apps", select the "Web" icon to create your web app. (You may want to enable hosting too; I did not because I use GitHub Pages for hosting).
+6. The previous step generated some text with a `firebaseConfig` object: copy this somewhere.
 
 Then:
 
-5. Copy the files from this repo and serve them from wherever (e.g., using Github Pages).
-6. In `config.js`, copy your Firebase config data (provided by Firebase under Settings -> General).
-7. In `config.js`, also update `clickerUrl` with the URL to your clicker (the `index.html` page).
-8. That's also where you can edit the bubble colors.
+7. Copy the files from this repo and serve them from wherever (e.g., using Github Pages or Firebase hosting).
+8. In `config.js`, copy your Firebase config data (see step 6, or go to Settings -> General in Firebase).
+9. In `config.js`, also update `clickerUrl` with the full URL to your clicker (the `index.html` page).
+10. That's also where you can edit the bubble colors.
 
 Usage should be self explanatory. In a nutshell:
 

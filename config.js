@@ -1,11 +1,11 @@
 // Copy/paste info from Firebase. Make sure to keep the word "export".
 export const firebaseConfig = {
-    apiKey: "AIzaSyCRpILPQ5n3PimcVlQTl2g1oJ5zwR2Xing",
-    authDomain: "my-live-polling.firebaseapp.com",
-    projectId: "my-live-polling",
-    storageBucket: "my-live-polling.firebasestorage.app",
-    messagingSenderId: "367126138943",
-    appId: "1:367126138943:web:857243dd5c68a2f00ce88a"
+    apiKey: "AIzaSyAs9nhZuvHgGlPORPR3c_LYHenXjfbnamo",
+    authDomain: "schoen-poll.firebaseapp.com",
+    projectId: "schoen-poll",
+    storageBucket: "schoen-poll.firebasestorage.app",
+    messagingSenderId: "160493309944",
+    appId: "1:160493309944:web:40201dc27a1749c5a4500d"
 };
 
 // Specify the URL to the clicker here, for the QR code.
