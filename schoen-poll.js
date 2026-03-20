@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function startListening() {
         
         // 1. Listen to Live State (Core Poll Data)
+        if (unsubscribeLiveState) unsubscribeLiveState();
         unsubscribeLiveState = onSnapshot(doc(db, "state", "live"), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -73,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // 2. Listen to Display State (Presentation Flags)
+        if (unsubscribeDisplayState) unsubscribeDisplayState();
         unsubscribeDisplayState = onSnapshot(doc(db, "state", "display"), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
