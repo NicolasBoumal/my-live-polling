@@ -35,6 +35,18 @@ export function initAdminAuth(app, db, uiElements, options = {}) {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
+            // If signed in but anonymous (e.g., if the clicker was
+            // opened in the same browser), ignore that: do as if
+            // the user wasn't logged it at all.
+            // This is to avoid an infinite loop of automatic
+            // anonymous log in and log out if the clicker and the
+            // remote are open in the same browser.
+            if (user.isAnonymous) {
+                safeSet(uiElements.loginSection, 'show');
+                safeSet(uiElements.loginBtn, 'show');
+                return;
+            }
+
             safeSet(uiElements.authMessage, 'text', "Checking permissions...");
             safeSet(uiElements.loginBtn, 'hide');
 
