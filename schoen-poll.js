@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-import { firebaseConfig, clickerUrl } from "./config.js";
+import { firebaseConfig, clickerUrl, colors } from "./config.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -16,9 +16,6 @@ let nodes = [];
 let currentOptions = [];
 let currentRadius = 12;
 let currentQuestionId = null;
-
-// Custom color palette
-const colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#64B5CD", "#CCB974"];
 
 // 3. Wait for the DOM to load before grabbing elements
 document.addEventListener("DOMContentLoaded", () => {

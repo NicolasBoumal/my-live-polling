@@ -23,6 +23,7 @@ Then:
 5. Copy the files from this repo and serve them from wherever (e.g., using Github Pages).
 6. In `config.js`, copy your Firebase config data (provided by Firebase under Settings -> General).
 7. In `config.js`, also update `clickerUrl` with the URL to your clicker (the `index.html` page).
+8. That's also where you can edit the bubble colors.
 
 Usage should be self explanatory. In a nutshell:
 
