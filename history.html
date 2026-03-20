@@ -175,6 +175,9 @@
                         }
                     });
 
+                    // Skip questions that received no votes at all
+                    if (totalVotes === 0) return;
+
                     questionsRaw.push({
                         id: docSnap.id,
                         timestampMs,
@@ -276,7 +279,7 @@
                             legendDiv.appendChild(legendItem);
                         });
 
-                        // Handle edge case where a poll was launched but got 0 votes
+                        // Handle edge case where a poll was launched but got 0 votes (won't trigger since we normally skip those)
                         if (q.totalVotes === 0) {
                             barDiv.innerHTML = '<div style="width: 100%; text-align: center; color: #888; line-height: 36px; font-size: 0.9rem;">No votes recorded</div>';
                         }
