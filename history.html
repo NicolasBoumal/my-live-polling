@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Schoen Poll - History</title>
+    
+    <!-- These are just for the favicon. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f7f6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Login Screen */
+        #loginSection { text-align: center; margin-top: 100px; }
+        #loginBtn { background: #4285F4; color: white; padding: 15px 30px; font-size: 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
+        header h1 { margin: 0; font-size: 1.8rem; color: #1a365d; }
+        .nav-links a { text-decoration: none; color: #4285F4; font-weight: bold; margin-left: 15px; }
+        .nav-links a:hover { text-decoration: underline; }
+
+        /* History Grouping */
+        .date-group { margin-bottom: 40px; }
+        .date-header { font-size: 1.4rem; color: #555; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+
+        /* Question Cards */
+        .question-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; border-left: 5px solid #4285F4; }
+        .question-time { font-size: 0.9rem; color: #888; margin-bottom: 10px; font-weight: bold; }
+        
+        /* Options Grid: Flexbox makes it naturally adapt whether there are 2, 3, or 4 items */
+        .options-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        
+        /* Individual Option Stats */
+        .option-stat {
+            position: relative;
+            flex: 1 1 calc(25% - 10px); /* Tries to fit 4 across, wraps if needed */
+            min-width: 120px;
+            background: #f0f4f8;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            z-index: 1;
+        }
+
+        /* The visual "Bar" behind the text */
+        .option-bar-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: #dbeafe; /* Light blue */
+            z-index: -1;
+            transition: width 0.5s ease-out;
+        }
+
+        .option-label { font-weight: bold; color: #2d3748; margin-bottom: 5px; font-size: 1.1rem; }
+        .option-count { font-size: 0.9rem; color: #4a5568; }
+        
+        .no-data { text-align: center; color: #888; font-style: italic; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <div id="loginSection">
+        <h2>Schoen Poll History</h2>
+        <p>Admin access required.</p>
+        <button id="loginBtn">Log in with Google</button>
+    </div>
+
+    <div id="historySection" class="hidden">
+        <h1>Schoen Poll History</h1>
+        <div id="historyContainer">
+            <div class="no-data">Loading history data...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        // Import your config
+        import { firebaseConfig } from "./config.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const loginSection = document.getElementById('loginSection');
+        const historySection = document.getElementById('historySection');
+        const historyContainer = document.getElementById('historyContainer');
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            signInWithPopup(auth, new GoogleAuthProvider());
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginSection.classList.add('hidden');
+                historySection.classList.remove('hidden');
+                loadHistory();
+            }
+        });
+
+        async function loadHistory() {
+            try {
+                // Fetch all questions
+                const qSnap = await getDocs(query(collection(db, "questions")));
+                const questionsRaw = [];
+
+                // Fetch answers for each question concurrently
+                const promises = qSnap.docs.map(async (docSnap) => {
+                    const data = docSnap.data();
+                    if (!data.timestamp) return; // Skip if timestamp is somehow missing/pending
+
+                    const dateObj = data.timestamp.toDate();
+                    const timestampMs = dateObj.getTime();
+                    
+                    // Format dates
+                    const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                    // Initialize tallies
+                    const tallies = {};
+                    data.options.forEach(opt => tallies[opt] = 0);
+                    let totalVotes = 0;
+
+                    // Fetch the answers subcollection for this specific question
+                    const ansSnap = await getDocs(collection(db, `questions/${docSnap.id}/answers`));
+                    ansSnap.forEach(ansDoc => {
+                        const choice = ansDoc.data().choice;
+                        if (tallies[choice] !== undefined) {
+                            tallies[choice]++;
+                            totalVotes++;
+                        }
+                    });
+
+                    questionsRaw.push({
+                        id: docSnap.id,
+                        timestampMs,
+                        dateStr,
+                        timeStr,
+                        options: data.options,
+                        tallies,
+                        totalVotes
+                    });
+                });
+
+                await Promise.all(promises);
+
+                if (questionsRaw.length === 0) {
+                    historyContainer.innerHTML = '<div class="no-data">No polling history found.</div>';
+                    return;
+                }
+
+                // Group by date
+                const groupedByDate = {};
+                questionsRaw.forEach(q => {
+                    if (!groupedByDate[q.dateStr]) {
+                        groupedByDate[q.dateStr] = { maxTime: q.timestampMs, items: [] };
+                    }
+                    groupedByDate[q.dateStr].items.push(q);
+                    // Keep track of the most recent time in a day to sort the days properly
+                    if (q.timestampMs > groupedByDate[q.dateStr].maxTime) {
+                        groupedByDate[q.dateStr].maxTime = q.timestampMs;
+                    }
+                });
+
+                // Sort Days: Descending (Most recent day first)
+                const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+                    return groupedByDate[b].maxTime - groupedByDate[a].maxTime;
+                });
+
+                historyContainer.innerHTML = ''; // Clear loading text
+
+                // Render the UI
+                sortedDates.forEach(date => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'date-group';
+                    
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'date-header';
+                    dateHeader.innerText = date;
+                    groupDiv.appendChild(dateHeader);
+
+                    // Sort Questions within the day: Ascending (Earliest time first)
+                    const dayItems = groupedByDate[date].items.sort((a, b) => a.timestampMs - b.timestampMs);
+
+                    dayItems.forEach(q => {
+                        const card = document.createElement('div');
+                        card.className = 'question-card';
+
+                        const timeHeader = document.createElement('div');
+                        timeHeader.className = 'question-time';
+                        timeHeader.innerText = `${q.timeStr} — ${q.totalVotes} total votes`;
+                        card.appendChild(timeHeader);
+
+                        const optionsGrid = document.createElement('div');
+                        optionsGrid.className = 'options-grid';
+
+                        q.options.forEach(opt => {
+                            const count = q.tallies[opt];
+                            const percentage = q.totalVotes > 0 ? Math.round((count / q.totalVotes) * 100) : 0;
+
+                            const statDiv = document.createElement('div');
+                            statDiv.className = 'option-stat';
+                            
+                            statDiv.innerHTML = `
+                                <div class="option-bar-bg" style="width: ${percentage}%;"></div>
+                                <span class="option-label">${opt}</span>
+                                <span class="option-count">${count} vote${count !== 1 ? 's' : ''} (${percentage}%)</span>
+                            `;
+                            optionsGrid.appendChild(statDiv);
+                        });
+
+                        card.appendChild(optionsGrid);
+                        groupDiv.appendChild(card);
+                    });
+
+                    historyContainer.appendChild(groupDiv);
+                });
+
+            } catch (error) {
+                console.error("Error fetching history: ", error);
+                historyContainer.innerHTML = '<div class="no-data">Error loading history. Check console.</div>';
+            }
+        }
+    </script>
+</body>
+</html>

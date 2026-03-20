@@ -30,6 +30,7 @@ Usage should be self explanatory. In a nutshell:
 * Have participants open the `index.html` page on their devices: that's the clicker.
 * Open `results.html` on your lecture screen.
 * Alternatively, look inside `results.html` and copy its relevant code to your setup: perfect for a [revealjs](https://revealjs.com/)-style presentation!
+* The `history.html` page displays past questions and answers.
 
 
 ## Side notes
