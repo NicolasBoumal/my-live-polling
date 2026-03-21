@@ -15,6 +15,23 @@
     <style>
         body { font-family: system-ui, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; text-align: center; }
         #statusMessage { color: #666; margin-bottom: 20px; font-style: italic; }
+        
+        /* Semantic Status Message Styling */
+        #statusMessage { 
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .status-info { background-color: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .status-success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-warning { background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .status-error { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .hidden { display: none !important; }
+
         .options-container { display: flex; flex-direction: column; gap: 15px; }
         button.option-btn {
             padding: 15px 20px; font-size: 1.2em; cursor: pointer;
@@ -32,12 +49,12 @@
 <body>
 
     <h2>Schoen Poll</h2>
-    <div id="statusMessage">Connecting...</div>
+    <div id="statusMessage" class="status-info">Connecting...</div>
     <div id="optionsContainer" class="options-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         import { firebaseConfig } from "./config.js";
@@ -55,37 +72,62 @@
 
         let clicksRemaining = 5; // Feeling facetious?
 
+        function showStatus(message, type = 'info', autoHide = false) {
+            if (!statusMessage) return;
+            
+            // Remove old classes
+            statusMessage.classList.remove('status-info', 'status-success', 'status-warning', 'status-error', 'hidden');
+            
+            if (!message) {
+                statusMessage.classList.add('hidden');
+                return;
+            }
+
+            // Apply new classes and HTML
+            statusMessage.classList.add(`status-${type}`);
+            statusMessage.innerHTML = message;
+
+            if (autoHide) {
+                setTimeout(() => {
+                    statusMessage.classList.add('hidden');
+                    statusMessage.innerHTML = "";
+                }, 3000);
+            }
+        }
+
         // 1. Log the student in silently as anonymous user (unless it's me, connected as admin)
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // If a user is already logged in, just use that session
                 console.log("Session detected: ", user.isAnonymous ? "Anonymous" : "Authenticated");
                 currentUser = user;
-
-                // Start the app logic
                 startListeningToLiveState();
             } else {
                 // No session found? Only Then sign in anonymously
                 console.log("No session found. Signing in anonymously...");
-                signInAnonymously(auth).catch((error) => {
-                    console.error("Auth Error:", error.code, error.message);
-                    if (error.code === 'auth/quota-exceeded' || error.code === 'auth/too-many-requests') {
-                        statusMessage.innerHTML = `
-                            <div style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
+                
+                // Enforce maximum persistence of the new anonymous session (it is so by default, but let's be explicit)
+                setPersistence(auth, browserLocalPersistence)
+                    .then(() => {
+                        return signInAnonymously(auth);
+                    })
+                    .catch((error) => {
+                        console.error("Auth Error:", error.code, error.message);
+                        if (error.code === 'auth/quota-exceeded' || error.code === 'auth/too-many-requests') {
+                            showStatus(`
                                 <strong>⚠️ Action needed</strong><br>
-                                Too many new users are connecting from the same IP address at once.
-                                <br><br>
+                                Too many new users are connecting from the same Wi-Fi.<br><br>
                                 <strong>To fix this:</strong>
-                                <ol>
-                                    <li>Turn <strong>OFF</strong> Wi-Fi on your phone.</li>
-                                    <li>Refresh this page using your <strong>Cellular Data</strong>.</li>
-                                    <li>Once logged in, you can turn Wi-Fi back on.</li>
+                                <ol style="text-align: left; margin-bottom: 0; padding-left: 20px;">
+                                    <li>Turn <strong>OFF</strong> Wi-Fi.</li>
+                                    <li>Refresh page using <strong>Cellular Data</strong>.</li>
+                                    <li>Turn Wi-Fi back on.</li>
                                 </ol>
-                            </div>`;
-                    } else {
-                        statusMessage.innerText = "Connection error. Please try refreshing the page.";
-                    }
-                });
+                            `, 'warning');
+                        } else {
+                            showStatus("Connection error. Please try refreshing the page.", "error");
+                        }
+                    });
             }
         });
 
@@ -111,7 +153,6 @@
                 currentSelection = null;
                 isNewQuestionLoad = true; 
 
-                // PERSISTENCE: Check if this matches the "active" one in storage
                 const savedId = localStorage.getItem('active_poll_id');
                 if (savedId === activeQuestionId) {
                     // Same question as before refresh, load the saved clicks
@@ -127,9 +168,9 @@
             optionsContainer.innerHTML = ''; 
 
             if (data.status === "open") {
-                updateStatusUI(); // Use the helper to show clicks remaining
+                updateStatusUI(); 
             } else {
-                statusMessage.innerText = "Polling is currently closed.";
+                showStatus("Polling is currently closed.", "info");
             }
 
             data.options.forEach(optionText => {
@@ -156,9 +197,8 @@
         async function submitAnswer(selectedOption, clickedButton) {
             if (!currentUser || !activeQuestionId) return;
 
-            // Check if they are out of moves
             if (clicksRemaining <= 0 && currentSelection !== selectedOption) {
-                statusMessage.innerHTML = "<span style='color: #EA4335;'>No more changes allowed for this question.</span>";
+                showStatus("No more changes allowed for this question.", "error");
                 return;
             }
 
@@ -188,7 +228,7 @@
 
             } catch (error) {
                 console.error("Error:", error);
-                statusMessage.innerText = "Connection error. Please tap again.";
+                showStatus("Connection error. Please tap again.", "error");
             }
         }
 
@@ -196,16 +236,16 @@
             if (clicksRemaining > 0) {
                 if (clicksRemaining <= 3) {
                     const timesText = clicksRemaining === 1 ? "time" : "times";
-                    statusMessage.innerText = `You can change your answer ${clicksRemaining} more ${timesText}.`;
+                    showStatus(`You can change your answer ${clicksRemaining} more ${timesText}.`, "info");
                 } else {
-                    statusMessage.innerText = "";
+                    showStatus(""); // Passing empty string hides the box
                 }
             } else {
-                statusMessage.innerText = "Final answer locked in.";
+                showStatus("Final answer locked in.", "success");
             }
         }
 
-        // 5. Check if the user already answered this question (for page reloads)
+        // 5. Check if the user already answered this question
         async function restorePreviousAnswer(questionId) {
             if (!currentUser || !questionId) return;
 
