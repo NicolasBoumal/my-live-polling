@@ -258,7 +258,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '70%', 
+                        cutout: '55%', // <-- 1. Decreased from 70% to make segments thicker
                         animation: {
                             duration: 400 
                         },
@@ -267,12 +267,15 @@
                                 display: false 
                             },
                             datalabels: {
-                                color: '#ffffff', // White text
+                                color: '#ffffff',
                                 font: { weight: 'bold', size: 14, family: 'system-ui' },
+                                
+                                // <-- 2. Add a dark outline to the text
+                                textStrokeColor: 'rgba(0, 0, 0, 0.6)', 
+                                textStrokeWidth: 3,
+                                
                                 formatter: (value, context) => {
-                                    // If the slice has 0 votes, don't draw a label
                                     if (value === 0) return ''; 
-                                    // Otherwise, return the name of the option (e.g., "Yes")
                                     return context.chart.data.labels[context.dataIndex];
                                 }
                             }
