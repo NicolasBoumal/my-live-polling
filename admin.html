@@ -21,11 +21,21 @@
         }
         .hidden { display: none !important; }
         
-        /* Typography */
-        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: #555; text-align: center; }
+        /* Top Bar */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .top-bar h2 { margin: 0; font-size: 1.2rem; color: #555; }
+        .qr-toggle { 
+            background: #e0e0e0; color: #333; border: none; border-radius: 20px; 
+            padding: 8px 15px; font-weight: bold; font-size: 0.85rem; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .qr-toggle.active { background: #673ab7; color: white; }
+
+        /* General Readout & Typography */
+        h3 { text-align: center; color: #333; margin-top: 0; }
         .readout { 
-            font-size: 2.2rem; font-weight: 800; text-align: center; 
-            background: white; padding: 20px; border-radius: 12px;
+            font-size: 2rem; font-weight: 800; text-align: center; 
+            background: white; padding: 15px; border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;
             color: #1a365d;
         }
@@ -38,28 +48,37 @@
             transition: transform 0.1s, opacity 0.2s;
         }
         button:active { transform: scale(0.97); }
-
-        /* Active Controls */
-        .controls-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
-        #revealBtn { background: #FBBC05; color: black; padding: 20px; font-size: 1.5rem; }
-        #toggleStatusBtn { background: #EA4335; color: white; padding: 15px; font-size: 1.1rem; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Launchpad Grid */
-        .launch-grid { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
-            margin-bottom: 30px;
-        }
-        .launch-btn { 
-            background: #4285F4; color: white; padding: 15px 10px; 
-            font-size: 1rem; line-height: 1.3;
-        }
-        .launch-btn.full-width { grid-column: 1 / -1; background: #34A853; }
+        .launch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; }
+        .launch-btn { background: #4285F4; color: white; padding: 20px 10px; font-size: 1rem; line-height: 1.3; }
+        .launch-btn.full-width { grid-column: 1 / -1; background: #1a365d; }
 
-        /* Danger Zone / Admin Tools */
-        details { 
-            background: white; padding: 15px; border-radius: 8px; 
-            border: 1px solid #ddd;
+        /* Control Deck & Tallies */
+        .tallies-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;
         }
+        .tally-box {
+            background: #fff; padding: 12px; border-radius: 8px; text-align: center;
+            border: 1px solid #ddd; display: flex; flex-direction: column;
+        }
+        .tally-box strong { font-size: 1.1rem; color: #444; margin-bottom: 4px; }
+        .tally-box span { font-size: 1.5rem; font-weight: bold; color: #4285F4; }
+
+        .controls-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+        #toggleStatusBtn { background: #EA4335; color: white; padding: 18px; font-size: 1.2rem; }
+        #revealBtn { background: #FBBC05; color: black; padding: 18px; font-size: 1.2rem; }
+        
+        /* The Finish Button (De-escalated design) */
+        .hollow-btn {
+            background: transparent; color: #555; border: 2px solid #aaa;
+            padding: 15px; font-size: 1rem; margin-top: 10px;
+            box-shadow: none;
+        }
+
+        /* Advanced Admin Tools */
+        details { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-top: 30px; }
         summary { font-weight: bold; color: #666; cursor: pointer; outline: none; }
         .admin-tools { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .tool-btn { padding: 12px; font-size: 0.9rem; background: #e0e0e0; color: #333; box-shadow: none; }
@@ -67,7 +86,6 @@
         
         #loginSection { text-align: center; margin-top: 50px; }
         #loginBtn { background: #4285F4; color: white; padding: 15px; font-size: 1.2rem; }
-        
         #statusText { text-align: center; color: #666; height: 20px; margin-top: 10px; font-size: 0.9rem; }
     </style>
 </head>
@@ -77,29 +95,43 @@
         <h2>Schoen Poll Remote</h2>
         <p>Admin access required.</p>
         <button id="loginBtn">Log in with Google</button>
-        <div id="authMessage"></div>
+        <div id="authMessage" style="color: #c62828; margin-top: 15px; font-weight: bold;"></div>
     </div>
 
     <div id="adminSection" class="hidden">
         
-        <div class="readout">
-            Votes: <span id="voteCount">0</span> / <span id="userCount">0</span>
+        <div class="top-bar">
+            <h2>Schoen Poll Remote</h2>
+            <button id="qrToggleBtn" class="qr-toggle">QR: OFF</button>
         </div>
 
-        <div class="controls-grid">
-            <button id="revealBtn">Reveal Answers</button>
-            <button id="toggleStatusBtn">Close Poll</button>
+        <div id="launchpadSection">
+            <h3 style="margin-bottom: 20px; color: #666;">Select a Question Type</h3>
+            <div class="launch-grid">
+                <button class="launch-btn preset-btn" data-options="Yes, No">Yes / No</button>
+                <button class="launch-btn preset-btn" data-options="True, False">True / False</button>
+                <button class="launch-btn preset-btn" data-options="Yes, No, Maybe">Yes / No / Maybe</button>
+                <button class="launch-btn preset-btn" data-options="True, False, Unsure">True / False / Unsure</button>
+                <button class="launch-btn preset-btn" data-options="A, B, C, D">A, B, C, D</button>
+                <button class="launch-btn" id="customLaunchBtn" style="background: #1a365d;">Custom...</button>
+            </div>
         </div>
 
-        <h2>Launch Question</h2>
-        
-        <div class="launch-grid">
-            <button class="launch-btn preset-btn" data-options="Yes, No">Yes / No</button>
-            <button class="launch-btn preset-btn" data-options="True, False">True / False</button>
-            <button class="launch-btn preset-btn" data-options="Yes, No, Maybe">Yes / No / Maybe</button>
-            <button class="launch-btn preset-btn" data-options="True, False, Unsure">True / False / Unsure</button>
-            <button class="launch-btn preset-btn" data-options="A, B, C, D">A, B, C, D</button>
-            <button class="launch-btn" id="customLaunchBtn" style="background: #1a365d;">Custom...</button>
+        <div id="controlDeckSection" class="hidden">
+            <h3 id="activePollTitle">Active Poll</h3>
+            
+            <div class="readout">
+                Votes: <span id="voteCount">0</span> / <span id="userCount">0</span>
+            </div>
+
+            <div id="liveTallies" class="tallies-grid"></div>
+
+            <div class="controls-grid">
+                <button id="toggleStatusBtn">Close Poll</button>
+                <button id="revealBtn">Reveal Answers</button>
+            </div>
+
+            <button id="finishBtn" class="hollow-btn">Clear Projector & Finish</button>
         </div>
 
         <div id="statusText"></div>
@@ -108,7 +140,7 @@
             <summary>Advanced Admin Tools</summary>
             <div class="admin-tools">
                 <span id="userEmailDisplay" style="font-size: 0.8rem; text-align: center; color: #666;"></span>
-                <button class="tool-btn" id="qrToggleBtn" style="background: #673ab7; color: white;">Show QR Code</button>
+                <button class="tool-btn" id="reactivateBtn" style="background: #ff9800; color: white;">Undo: Reactivate Last Poll</button>
                 <button class="tool-btn" id="simulateBtn">Simulate 100 Votes</button>
                 <button class="tool-btn danger-btn" id="resetPresenceBtn">Reset Presence Count</button>
                 <button class="tool-btn" id="logoutBtn" style="background: #555; color: white;">Log Out</button>
@@ -119,8 +151,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+        import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { firebaseConfig } from "./config.js";
         import { initAdminAuth } from "./adminauth.js";
 
@@ -128,21 +159,30 @@
         const db = getFirestore(app);
 
         // UI Elements
-        const loginSection = document.getElementById('loginSection');
-        const adminSection = document.getElementById('adminSection');
-        const statusText = document.getElementById('statusText');
+        const launchpadSection = document.getElementById('launchpadSection');
+        const controlDeckSection = document.getElementById('controlDeckSection');
+        const activePollTitle = document.getElementById('activePollTitle');
+        const liveTallies = document.getElementById('liveTallies');
+        
         const revealBtn = document.getElementById('revealBtn');
         const toggleBtn = document.getElementById('toggleStatusBtn');
+        const finishBtn = document.getElementById('finishBtn');
         const qrToggleBtn = document.getElementById('qrToggleBtn');
+        const reactivateBtn = document.getElementById('reactivateBtn');
+        const simulateBtn = document.getElementById('simulateBtn');
+        const statusText = document.getElementById('statusText');
 
         // State Variables
         let currentLiveState = {};
         let currentDisplayState = { reveal: false, showQR: false };
         let unsubscribeAnswers = null;
         let unsubscribeLiveState = null;
-        let unsubscribeDisplayState = null;
+        let unsubscribeDisplayState = null; 
+        
         let seenUserIds = new Set();
         let currentVoteCount = 0;
+        let optionTallies = new Map();
+
 
         function updateCountsUI() {
             document.getElementById('userCount').innerText = seenUserIds.size;
@@ -165,6 +205,18 @@
                 adminSection.classList.add('hidden');
                 cleanupListeners(); }
         });
+        function renderTallies() {
+            liveTallies.innerHTML = '';
+            if (!currentLiveState.options) return;
+            
+            currentLiveState.options.forEach(opt => {
+                const count = optionTallies.get(opt) || 0;
+                const div = document.createElement('div');
+                div.className = 'tally-box';
+                div.innerHTML = `<strong>${opt}</strong><span>${count}</span>`;
+                liveTallies.appendChild(div);
+            });
+        }
 
         // Listeners
         function setupAdminListeners() {
@@ -172,18 +224,7 @@
             unsubscribeLiveState = onSnapshot(doc(db, "state", "live"), (docSnap) => {
                 if (docSnap.exists()) {
                     currentLiveState = docSnap.data();
-                    
-                    if (currentLiveState.status === "open") {
-                        toggleBtn.innerText = "Close Poll";
-                        toggleBtn.style.background = "#EA4335"; 
-                    } else {
-                        toggleBtn.innerText = "Re-open Poll";
-                        toggleBtn.style.background = "#34A853"; 
-                    }
-
-                    if (currentLiveState.active_question_id) {
-                        listenToAdminVotes(currentLiveState.active_question_id);
-                    }
+                    handleModeSwitch();
                 }
             });
 
@@ -192,21 +233,61 @@
                 if (docSnap.exists()) {
                     currentDisplayState = docSnap.data();
 
+                    // Update Reveal Button UI
                     if (currentDisplayState.reveal) {
                         revealBtn.innerText = "Hide Answers";
-                        revealBtn.style.opacity = "0.7";
+                        revealBtn.style.background = "#555";
+                        revealBtn.style.color = "white";
                     } else {
                         revealBtn.innerText = "Reveal Answers";
-                        revealBtn.style.opacity = "1";
+                        revealBtn.style.background = "#FBBC05";
+                        revealBtn.style.color = "black";
                     }
 
+                    // Update QR Toggle UI
                     if (currentDisplayState.showQR) {
-                        qrToggleBtn.innerText = "Hide QR Code";
+                        qrToggleBtn.innerText = "QR: ON";
+                        qrToggleBtn.classList.add('active');
                     } else {
-                        qrToggleBtn.innerText = "Show QR Code";
+                        qrToggleBtn.innerText = "QR: OFF";
+                        qrToggleBtn.classList.remove('active');
                     }
                 }
             });
+        }
+
+        function handleModeSwitch() {
+            const status = currentLiveState.status;
+
+            if (!status || status === "complete") {
+                // MODE 1: Launchpad
+                launchpadSection.classList.remove('hidden');
+                controlDeckSection.classList.add('hidden');
+                simulateBtn.disabled = true;
+                
+                // Enable undo if there's a recent question ID we can reactivate
+                reactivateBtn.disabled = !currentLiveState.active_question_id; 
+            } else {
+                // MODE 2: Control Deck
+                launchpadSection.classList.add('hidden');
+                controlDeckSection.classList.remove('hidden');
+                simulateBtn.disabled = false;
+                reactivateBtn.disabled = true; // Can't undo while a poll is actively running
+
+                activePollTitle.innerText = `Active: ${currentLiveState.options.join(' / ')}`;
+
+                if (status === "open") {
+                    toggleBtn.innerText = "Close Poll";
+                    toggleBtn.style.background = "#EA4335"; 
+                } else {
+                    toggleBtn.innerText = "Re-open Poll";
+                    toggleBtn.style.background = "#34A853"; 
+                }
+
+                if (currentLiveState.active_question_id) {
+                    listenToAdminVotes(currentLiveState.active_question_id);
+                }
+            }
         }
 
         function cleanupListeners() {
@@ -219,14 +300,21 @@
             if (unsubscribeAnswers) unsubscribeAnswers();
             unsubscribeAnswers = onSnapshot(collection(db, "questions", questionId, "answers"), (snapshot) => {
                 currentVoteCount = snapshot.size;
-                snapshot.forEach(doc => seenUserIds.add(doc.id));
+                optionTallies.clear();
+                
+                snapshot.forEach(doc => {
+                    seenUserIds.add(doc.id); // Add to global presence
+                    const choice = doc.data().choice;
+                    optionTallies.set(choice, (optionTallies.get(choice) || 0) + 1);
+                });
+                
                 updateCountsUI();
+                renderTallies();
             });
         }
 
         // --- CORE ACTIONS ---
 
-        // Generalized Launch Function
         async function launchQuestion(optionsArray) {
             if (!optionsArray || optionsArray.length === 0) return;
             try {
@@ -245,18 +333,16 @@
                 // Reset the display state for the new question
                 await setDoc(doc(db, "state", "display"), {
                     reveal: false,
-                    showQR: false
+                    showQR: currentDisplayState.showQR // Keep QR state
                 });
 
-                statusText.innerText = `Launched: ${optionsArray.join(', ')}`;
-                setTimeout(() => statusText.innerText = "", 3000);
             } catch (error) {
                 console.error("Error launching:", error);
                 statusText.innerText = "Launch failed.";
             }
         }
 
-        // Preset Buttons
+        // Mode 1: Launch Buttons
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const options = e.target.getAttribute('data-options').split(',').map(o => o.trim());
@@ -264,7 +350,6 @@
             });
         });
 
-        // Custom Launch Button
         document.getElementById('customLaunchBtn').addEventListener('click', () => {
             const userInput = prompt("Enter custom options, separated by commas:\n(e.g., Apple, Banana, Cherry)", "");
             if (userInput !== null && userInput.trim() !== "") {
@@ -273,9 +358,19 @@
             }
         });
 
-        // Reveal Toggle - Writes to state/display
+        // Mode 2: Control Buttons
         revealBtn.addEventListener('click', async () => {
             if (!currentLiveState.active_question_id) return;
+            
+            // If revealing, save the final tallies to the DB as a backup
+            if (!currentDisplayState.reveal) {
+                const talliesObj = Object.fromEntries(optionTallies);
+                await setDoc(doc(db, "questions", currentLiveState.active_question_id), {
+                    finalTallies: talliesObj,
+                    totalVotes: currentVoteCount
+                }, { merge: true });
+            }
+
             await setDoc(doc(db, "state", "display"), { 
                 reveal: !currentDisplayState.reveal
             }, { merge: true });
@@ -290,20 +385,43 @@
             }, { merge: true });
         });
 
-        // QR Toggle - Writes to state/display
+        // The "Complete" Button
+        finishBtn.addEventListener('click', async () => {
+            if (!currentLiveState.active_question_id) return; 
+            
+            // 1. Mark the question complete (Sends Admin to Launchpad, Clickers to Waiting)
+            await setDoc(doc(db, "state", "live"), { 
+                status: "complete"
+            }, { merge: true });
+
+            // 2. Hide the projector answers automatically
+            await setDoc(doc(db, "state", "display"), { 
+                reveal: false
+            }, { merge: true });
+        });
+
+        // The Top Bar Toggle
         qrToggleBtn.addEventListener('click', async () => {
             await setDoc(doc(db, "state", "display"), { 
                 showQR: !currentDisplayState.showQR
             }, { merge: true });
         });
 
-        // --- ADMIN TOOLS ---
+        // --- ADVANCED TOOLS ---
+
+        reactivateBtn.addEventListener('click', async () => {
+            if (!currentLiveState.active_question_id) return;
+            // Un-complete the question and set it to closed
+            await setDoc(doc(db, "state", "live"), { 
+                status: "closed"
+            }, { merge: true });
+        });
 
         document.getElementById('resetPresenceBtn').addEventListener('click', async () => {
-            // if (!confirm("Wipe presence count? This deletes presence records.")) return;
             statusText.innerText = "Resetting...";
             try {
                 seenUserIds.clear();
+                // Re-add only the users who voted on the current active question to avoid UI weirdness
                 if (currentLiveState.active_question_id) {
                     const ansSnap = await getDocs(collection(db, "questions", currentLiveState.active_question_id, "answers"));
                     ansSnap.forEach(d => seenUserIds.add(d.id));
@@ -316,7 +434,7 @@
             }
         });
 
-        document.getElementById('simulateBtn').addEventListener('click', () => {
+        simulateBtn.addEventListener('click', () => {
             if (!currentLiveState.active_question_id) return alert("Launch a question first!");
             const qId = currentLiveState.active_question_id;
             const opts = currentLiveState.options;
