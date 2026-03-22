@@ -11,7 +11,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/schoen-poll/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/schoen-poll/favicon-16x16.png">
     <link rel="manifest" href="/schoen-poll/site.webmanifest">
-
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { 
@@ -46,12 +47,6 @@
 
         /* General Readout & Typography */
         h3 { text-align: center; color: #333; margin-top: 0; }
-        .readout { 
-            font-size: 2rem; font-weight: 800; text-align: center; 
-            background: white; padding: 15px; border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;
-            color: #1a365d;
-        }
 
         /* Buttons */
         button { 
@@ -68,16 +63,13 @@
         .launch-btn { background: #4285F4; color: white; padding: 20px 10px; font-size: 1rem; line-height: 1.3; }
         .launch-btn.full-width { grid-column: 1 / -1; background: #1a365d; }
 
-        /* Control Deck & Tallies */
-        .tallies-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;
+        /* Control Deck & Chart */
+        .chart-container {
+            position: relative;
+            height: 220px; 
+            width: 100%;
+            margin-bottom: 25px;
         }
-        .tally-box {
-            background: #fff; padding: 12px; border-radius: 8px; text-align: center;
-            border: 1px solid #ddd; display: flex; flex-direction: column;
-        }
-        .tally-box strong { font-size: 1.1rem; color: #444; margin-bottom: 4px; }
-        .tally-box span { font-size: 1.5rem; font-weight: bold; color: #4285F4; }
 
         .controls-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
         #toggleOpenCloseBtn { background: #EA4335; color: white; padding: 18px; font-size: 1.2rem; }
@@ -116,8 +108,7 @@
         <div class="top-bar">
             <h2>Schoen Poll Remote</h2>
             <div class="toggle-container">
-                <span id="qrToggleLabel">Show QR</span> <!-- : OFF -->
-                <label class="switch">
+                <span id="qrToggleLabel">Show QR</span> <label class="switch">
                     <input type="checkbox" id="qrToggleCheckbox">
                     <span class="slider"></span>
                 </label>
@@ -138,12 +129,10 @@
 
         <div id="controlDeckSection" class="hidden">
             <h3 id="activePollTitle">Active Poll</h3>
-            
-            <div class="readout">
-                Votes: <span id="voteCount">0</span> / <span id="userCount">0</span>
-            </div>
 
-            <div id="liveTallies" class="tallies-grid"></div>
+            <div class="chart-container">
+                <canvas id="talliesChart"></canvas>
+            </div>
 
             <div class="controls-grid">
                 <button id="toggleOpenCloseBtn">Close Poll</button>
@@ -181,7 +170,6 @@
         const launchpadSection = document.getElementById('launchpadSection');
         const controlDeckSection = document.getElementById('controlDeckSection');
         const activePollTitle = document.getElementById('activePollTitle');
-        const liveTallies = document.getElementById('liveTallies');
         
         const revealBtn = document.getElementById('revealBtn');
         const toggleOpenCloseBtn = document.getElementById('toggleOpenCloseBtn');
@@ -203,10 +191,83 @@
         let currentVoteCount = 0;
         let optionTallies = new Map();
 
+        // Chart variables
+        let liveChart = null; 
+        const chartColors = ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#9C27B0', '#00BCD4', '#FF9800', '#795548'];
+
+        // Plugin to draw text in the center of the doughnut
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                if (!chart.data.datasets.length) return;
+                const ctx = chart.ctx;
+                ctx.restore();
+                
+                // Get the exact center of the doughnut hole (accounts for the legend pushing it left)
+                const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+                // 1. Draw "Votes" label
+                ctx.font = "600 0.9rem system-ui";
+                ctx.fillStyle = "#888";
+                ctx.textBaseline = "middle";
+                const labelText = "Votes";
+                ctx.fillText(labelText, centerX - (ctx.measureText(labelText).width / 2), centerY - 15);
+
+                // 2. Draw "X / Y" numbers
+                ctx.font = "800 1.5rem system-ui";
+                ctx.fillStyle = "#1a365d";
+                const countText = `${currentVoteCount} / ${seenUserIds.size}`;
+                ctx.fillText(countText, centerX - (ctx.measureText(countText).width / 2), centerY + 12);
+                
+                ctx.save();
+            }
+        };
 
         function updateCountsUI() {
-            document.getElementById('userCount').innerText = seenUserIds.size;
-            document.getElementById('voteCount').innerText = currentVoteCount;
+            if (liveChart) liveChart.update();
+        }
+
+        function updateChart() {
+            if (!currentLiveState.options) return;
+            
+            const ctx = document.getElementById('talliesChart').getContext('2d');
+            const labels = currentLiveState.options;
+            const dataPoints = labels.map(opt => optionTallies.get(opt) || 0);
+
+            if (liveChart) {
+                liveChart.data.labels = labels;
+                liveChart.data.datasets[0].data = dataPoints;
+                liveChart.update();
+            } else {
+                liveChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    plugins: [centerTextPlugin],
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: dataPoints,
+                            backgroundColor: chartColors.slice(0, labels.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%', 
+                        animation: {
+                            duration: 400 
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { font: { size: 14, family: 'system-ui' } }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         // Admin authentication
@@ -225,18 +286,6 @@
                 adminSection.classList.add('hidden');
                 cleanupListeners(); }
         });
-        function renderTallies() {
-            liveTallies.innerHTML = '';
-            if (!currentLiveState.options) return;
-            
-            currentLiveState.options.forEach(opt => {
-                const count = optionTallies.get(opt) || 0;
-                const div = document.createElement('div');
-                div.className = 'tally-box';
-                div.innerHTML = `<strong>${opt}</strong><span>${count}</span>`;
-                liveTallies.appendChild(div);
-            });
-        }
 
         // Listeners
         function setupAdminListeners() {
@@ -289,6 +338,12 @@
                 
                 // Enable undo if there's a recent question ID we can reactivate
                 reactivateBtn.disabled = !currentLiveState.active_question_id; 
+
+                // Destroy chart to refresh it for the next launch
+                if (liveChart) {
+                    liveChart.destroy();
+                    liveChart = null;
+                }
             } else {
                 // MODE 2: Control Deck
                 launchpadSection.classList.add('hidden');
@@ -331,7 +386,7 @@
                 });
                 
                 updateCountsUI();
-                renderTallies();
+                updateChart();
             });
         }
 
