@@ -69,7 +69,7 @@
         let activeQuestionId = null;
         let currentSelection = null;
 
-        let clicksRemaining = 5; // Feeling facetious?
+        let clicksRemaining = 6; // Feeling facetious?
 
         function showStatus(message, type = 'info', autoHide = false) {
             if (!statusMessage) return;
@@ -158,7 +158,7 @@
                     clicksRemaining = parseInt(localStorage.getItem('active_poll_clicks')) || 0;
                 } else {
                     // Brand new question or first time seeing this ID
-                    clicksRemaining = 5;
+                    clicksRemaining = 6;
                     localStorage.setItem('active_poll_id', activeQuestionId);
                     localStorage.setItem('active_poll_clicks', clicksRemaining);
                 }
@@ -203,12 +203,12 @@
         async function submitAnswer(selectedOption, clickedButton) {
             if (!currentUser || !activeQuestionId) return;
 
-            if (clicksRemaining <= 0 && currentSelection !== selectedOption) {
+            // Block ANY click (selecting or unselecting) if they are out of clicks
+            if (clicksRemaining <= 0) {
                 showStatus("No more changes allowed for this question.", "error");
                 return;
             }
 
-            const isChange = (currentSelection !== selectedOption);
             const answerRef = doc(db, "questions", activeQuestionId, "answers", currentUser.uid);
 
             try {
@@ -225,11 +225,10 @@
                     await setDoc(answerRef, { choice: selectedOption, timestamp: serverTimestamp() });
                 }
 
-                // Only decrement if they actually changed their mind or made a new choice
-                if (isChange) {
-                    clicksRemaining--;
-                    localStorage.setItem('active_poll_clicks', clicksRemaining);
-                }
+                // Any successful action (checking or unchecking) now costs a click
+                clicksRemaining--;
+                localStorage.setItem('active_poll_clicks', clicksRemaining);
+                
                 updateStatusUI();
 
             } catch (error) {
