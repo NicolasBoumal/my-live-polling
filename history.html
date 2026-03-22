@@ -168,13 +168,14 @@
             try {
                 historyContainer.innerHTML = '<div class="no-data">Loading history data...</div>';
 
-                // 1. GATEKEEPER: Identify the currently live question
+                // 1. Identify the currently live question
                 const liveStateSnap = await getDoc(doc(db, "state", "live"));
                 let activeQuestionId = null;
                 
                 if (liveStateSnap.exists()) {
                     const liveData = liveStateSnap.data();
-                    if (liveData.status === "open") {
+                    // If a question is loaded and hasn't been cleared from the projector yet:
+                    if (liveData.active_question_id && liveData.status !== "complete") {
                         activeQuestionId = liveData.active_question_id;
                     }
                 }
