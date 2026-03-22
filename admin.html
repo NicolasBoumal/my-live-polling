@@ -67,12 +67,12 @@
         /* Control Deck & Chart */
         .chart-container {
             position: relative;
-            height: 220px; 
+            height: 275px; 
             width: 100%;
             margin-bottom: 25px;
         }
 
-        .controls-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+        .controls-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
         #toggleOpenCloseBtn { background: #EA4335; color: white; padding: 18px; font-size: 1.2rem; }
         #revealBtn { background: #FBBC05; color: black; padding: 18px; font-size: 1.2rem; }
         
@@ -258,7 +258,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '55%', // <-- 1. Decreased from 70% to make segments thicker
+                        cutout: '45%',
                         animation: {
                             duration: 400 
                         },
@@ -270,8 +270,11 @@
                                 color: '#ffffff',
                                 font: { weight: 'bold', size: 14, family: 'system-ui' },
                                 
-                                // <-- 2. Add a dark outline to the text
-                                textStrokeColor: 'rgba(0, 0, 0, 0.6)', 
+                                // --> CHANGE THIS TO A FUNCTION:
+                                textStrokeColor: (context) => {
+                                    // Grab the exact color assigned to this specific segment
+                                    return context.dataset.backgroundColor[context.dataIndex];
+                                },
                                 textStrokeWidth: 3,
                                 
                                 formatter: (value, context) => {
@@ -534,7 +537,11 @@
             statusText.innerText = "Simulating...";
             
             function sendVote() {
-                if (count >= 100) return (statusText.innerText = "Simulation done.");
+                if (count >= 100) {
+                    statusText.innerText = "Simulation done."
+                    setTimeout(() => statusText.innerText = "", 3000);
+                    return;
+                }
                 setDoc(doc(db, "questions", qId, "answers", "sim_" + Math.floor(Math.random() * 301).toString().padStart(3, '0')), {
                     choice: opts[Math.floor(Math.random() * opts.length)],
                     timestamp: serverTimestamp(), isSimulated: true
