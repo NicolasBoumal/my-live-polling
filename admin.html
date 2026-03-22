@@ -21,15 +21,28 @@
         }
         .hidden { display: none !important; }
         
-        /* Top Bar */
+        /* Top Bar & Real Toggle Switch */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .top-bar h2 { margin: 0; font-size: 1.2rem; color: #555; }
-        .qr-toggle { 
-            background: #e0e0e0; color: #333; border: none; border-radius: 20px; 
-            padding: 8px 15px; font-weight: bold; font-size: 0.85rem; cursor: pointer;
-            transition: all 0.2s;
+        
+        .toggle-container { display: flex; align-items: center; gap: 8px; }
+        #qrToggleLabel { font-size: 0.85rem; font-weight: bold; color: #666; width: 55px; text-align: right; }
+        
+        .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .3s; border-radius: 26px;
         }
-        .qr-toggle.active { background: #673ab7; color: white; }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px;
+            left: 3px; bottom: 3px; background-color: white;
+            transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        input:checked + .slider { background-color: #673ab7; }
+        input:checked + .slider:before { transform: translateX(20px); }
 
         /* General Readout & Typography */
         h3 { text-align: center; color: #333; margin-top: 0; }
@@ -102,11 +115,17 @@
         
         <div class="top-bar">
             <h2>Schoen Poll Remote</h2>
-            <button id="qrToggleBtn" class="qr-toggle">QR: OFF</button>
+            <div class="toggle-container">
+                <span id="qrToggleLabel">QR: OFF</span>
+                <label class="switch">
+                    <input type="checkbox" id="qrToggleCheckbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <div id="launchpadSection">
-            <h3 style="margin-bottom: 20px; color: #666;">Select a Question Type</h3>
+            <h3 style="margin-bottom: 20px; color: #666;">Select a question type</h3>
             <div class="launch-grid">
                 <button class="launch-btn preset-btn" data-options="Yes, No">Yes / No</button>
                 <button class="launch-btn preset-btn" data-options="True, False">True / False</button>
@@ -131,7 +150,7 @@
                 <button id="revealBtn">Reveal Answers</button>
             </div>
 
-            <button id="finishBtn" class="hollow-btn">Clear Projector & Finish</button>
+            <button id="finishBtn" class="hollow-btn">Mark poll as complete</button>
         </div>
 
         <div id="statusText"></div>
@@ -140,10 +159,10 @@
             <summary>Advanced Admin Tools</summary>
             <div class="admin-tools">
                 <span id="userEmailDisplay" style="font-size: 0.8rem; text-align: center; color: #666;"></span>
-                <button class="tool-btn" id="reactivateBtn" style="background: #ff9800; color: white;">Undo: Reactivate Last Poll</button>
-                <button class="tool-btn" id="simulateBtn">Simulate 100 Votes</button>
-                <button class="tool-btn danger-btn" id="resetPresenceBtn">Reset Presence Count</button>
-                <button class="tool-btn" id="logoutBtn" style="background: #555; color: white;">Log Out</button>
+                <button class="tool-btn" id="reactivateBtn" style="background: #ff9800; color: white;">Undo: reactivate completed poll</button>
+                <button class="tool-btn" id="simulateBtn">Simulate 100 votes</button>
+                <button class="tool-btn danger-btn" id="resetPresenceBtn">Reset presence count</button>
+                <button class="tool-btn" id="logoutBtn" style="background: #555; color: white;">Log out</button>
             </div>
         </details>
 
@@ -167,7 +186,8 @@
         const revealBtn = document.getElementById('revealBtn');
         const toggleOpenCloseBtn = document.getElementById('toggleOpenCloseBtn');
         const finishBtn = document.getElementById('finishBtn');
-        const qrToggleBtn = document.getElementById('qrToggleBtn');
+        const qrToggleCheckbox = document.getElementById('qrToggleCheckbox');
+        const qrToggleLabel = document.getElementById('qrToggleLabel');
         const reactivateBtn = document.getElementById('reactivateBtn');
         const simulateBtn = document.getElementById('simulateBtn');
         const statusText = document.getElementById('statusText');
@@ -246,11 +266,13 @@
 
                     // Update QR Toggle UI
                     if (currentDisplayState.showQR) {
-                        qrToggleBtn.innerText = "QR: ON";
-                        qrToggleBtn.classList.add('active');
+                        qrToggleCheckbox.checked = true;
+                        qrToggleLabel.innerText = "QR: ON";
+                        qrToggleLabel.style.color = "#673ab7";
                     } else {
-                        qrToggleBtn.innerText = "QR: OFF";
-                        qrToggleBtn.classList.remove('active');
+                        qrToggleCheckbox.checked = false;
+                        qrToggleLabel.innerText = "QR: OFF";
+                        qrToggleLabel.style.color = "#666";
                     }
                 }
             });
@@ -403,9 +425,9 @@
         });
 
         // The Top Bar Toggle
-        qrToggleBtn.addEventListener('click', async () => {
+        qrToggleCheckbox.addEventListener('change', async (e) => {
             await setDoc(doc(db, "state", "display"), { 
-                showQR: !currentDisplayState.showQR
+                showQR: e.target.checked 
             }, { merge: true });
         });
 
