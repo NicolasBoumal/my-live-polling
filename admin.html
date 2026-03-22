@@ -11,8 +11,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/schoen-poll/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/schoen-poll/favicon-16x16.png">
     <link rel="manifest" href="/schoen-poll/site.webmanifest">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <style>
         body { 
@@ -244,7 +245,7 @@
             } else {
                 liveChart = new Chart(ctx, {
                     type: 'doughnut',
-                    plugins: [centerTextPlugin],
+                    plugins: [centerTextPlugin, ChartDataLabels], 
                     data: {
                         labels: labels,
                         datasets: [{
@@ -263,8 +264,17 @@
                         },
                         plugins: {
                             legend: {
-                                position: 'right',
-                                labels: { font: { size: 14, family: 'system-ui' } }
+                                display: false 
+                            },
+                            datalabels: {
+                                color: '#ffffff', // White text
+                                font: { weight: 'bold', size: 14, family: 'system-ui' },
+                                formatter: (value, context) => {
+                                    // If the slice has 0 votes, don't draw a label
+                                    if (value === 0) return ''; 
+                                    // Otherwise, return the name of the option (e.g., "Yes")
+                                    return context.chart.data.labels[context.dataIndex];
+                                }
                             }
                         }
                     }
