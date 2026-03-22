@@ -202,11 +202,12 @@
                     const isLiveQuestion = (docSnap.id === activeQuestionId);
 
                     // 2. CACHE CHECK: Do we already have the computed results?
-                    if (data.finalTallies !== undefined && data.totalVotes !== undefined) {
+                    //    Force bypass of the cache if this is the active live question.
+                    if (!isLiveQuestion && data.finalTallies !== undefined && data.totalVotes !== undefined) {
                         tallies = data.finalTallies;
                         totalVotes = data.totalVotes;
                     } else {
-                        // Not cached: Compute them from the answers subcollection
+                        // Not cached (or is currently live): Compute them from the answers subcollection
                         data.options.forEach(opt => tallies[opt] = 0);
                         
                         const ansSnap = await getDocs(collection(db, `questions/${docSnap.id}/answers`));

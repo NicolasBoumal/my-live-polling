@@ -186,7 +186,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         import { firebaseConfig, colors } from "./config.js";
         import { initAdminAuth } from "./adminauth.js";
@@ -495,9 +495,18 @@
         // Status Toggle - Writes to state/live
         toggleOpenCloseBtn.addEventListener('click', async () => {
             if (!currentLiveState.active_question_id) return; 
-            // Defensively abort if the poll is already complete (shouldn't happen)
             if (currentLiveState.status === "complete") return;
+            
             const newStatus = currentLiveState.status === "open" ? "closed" : "open";
+            
+            // If we are re-opening the poll, delete the cached final tallies
+            if (newStatus === "open") {
+                await setDoc(doc(db, "questions", currentLiveState.active_question_id), {
+                    finalTallies: deleteField(),
+                    totalVotes: deleteField()
+                }, { merge: true });
+            }
+
             await setDoc(doc(db, "state", "live"), { 
                 status: newStatus
             }, { merge: true });
@@ -529,7 +538,13 @@
 
         reactivateBtn.addEventListener('click', async () => {
             if (!currentLiveState.active_question_id) return;
-            // Un-complete the question and set it to closed
+
+            // Delete the cached tallies when reactivating
+            await setDoc(doc(db, "questions", currentLiveState.active_question_id), {
+                finalTallies: deleteField(),
+                totalVotes: deleteField()
+            }, { merge: true });
+
             await setDoc(doc(db, "state", "live"), { 
                 status: "closed"
             }, { merge: true });
