@@ -85,4 +85,27 @@
     font-size: 1rem;
 }
 
+/* Replaced
+
 .hidden { display: none !important; }
+
+with the following three blocks of code, to allow fade in / out. */
+
+/* 1. The updated hidden class */
+.hidden { 
+    opacity: 0 !important; 
+    display: none !important; 
+}
+/* 2. Add this class to any container you want to fade */
+.fade-view {
+    opacity: 1;
+    /* 'allow-discrete' tells the browser to delay display:none until the opacity finishes fading */
+    transition: opacity 0.3s ease, display 0.3s ease allow-discrete;
+}
+/* 3. Tell the browser what opacity to start at when the .hidden class is removed */
+@starting-style {
+    .fade-view:not(.hidden) {
+        opacity: 0;
+    }
+}
+
