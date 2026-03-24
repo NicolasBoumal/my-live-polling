@@ -91,21 +91,19 @@
 
 with the following three blocks of code, to allow fade in / out. */
 
-/* 1. The updated hidden class */
-.hidden { 
-    opacity: 0 !important; 
-    display: none !important; 
-}
-/* 2. Add this class to any container you want to fade */
+/* 1. The fading base class */
 .fade-view {
     opacity: 1;
-    /* 'allow-discrete' tells the browser to delay display:none until the opacity finishes fading */
     transition: opacity 0.3s ease, display 0.3s ease allow-discrete;
 }
-/* 3. Tell the browser what opacity to start at when the .hidden class is removed */
+/* 2. The hidden state (no !important flags) */
+.hidden { 
+    opacity: 0; 
+    display: none; 
+}
+/* 3. The starting style for fading IN */
 @starting-style {
-    .fade-view:not(.hidden) {
+    .fade-view {
         opacity: 0;
     }
 }
-
