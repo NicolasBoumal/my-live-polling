@@ -273,6 +273,22 @@
                 console.error("Error fetching previous answer:", error);
             }
         }
+
+        // 6. Wake up instantly when the phone screen turns back on
+        document.addEventListener("visibilitychange", async () => {
+            if (document.visibilityState === 'visible' && currentUser) {
+                // The tab is active again. The Firestore websocket might be asleep. 
+                // Force a manual HTTP fetch right now to get the UI in sync instantly.
+                try {
+                    const docSnap = await getDoc(doc(db, "state", "live"));
+                    if (docSnap.exists()) {
+                        handleStateChange(docSnap.data());
+                    }
+                } catch (error) {
+                    console.error("Error waking up connection:", error);
+                }
+            }
+        });
     </script>
 </body>
 </html>
